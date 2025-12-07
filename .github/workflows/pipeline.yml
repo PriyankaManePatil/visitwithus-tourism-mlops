@@ -1,10 +1,46 @@
-name: Tourism MLOps Pipeline
+name: Tourism MLOps CI/CD Pipeline
+
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
+
 jobs:
-  test:
+  build-train-deploy:
     runs-on: ubuntu-latest
+
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_DATASET: "priyankamane10/visitwithus-tourism-dataset"
+      HF_MODEL: "priyankamane10/visitwithus-tourism-model"
+      HF_SPACE: "priyankamane10/visitwithus-tourism-app"
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Pipeline initialized
-        run: echo "Pipeline structure created successfully"
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -r app/requirements.txt
+          pip install pandas scikit-learn joblib huggingface_hub datasets xgboost
+
+      - name: Login to Hugging Face
+        run: |
+          python - <<EOF
+          from huggingface_hub import login
+          login("${HF_TOKEN}")
+          EOF
+
+      - name: Run Data Prep
+        run: python src/data_prep.py
+
+      - name: Train and Upload Best Model
+        run: python src/train.py
+
+      - name: Deploy Streamlit App to HF Space
+        run: python src/deploy_to_space.py
