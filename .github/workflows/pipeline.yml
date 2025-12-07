@@ -1,0 +1,10 @@
+name: Tourism MLOps Pipeline
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pipeline initialized
+        run: echo "Pipeline structure created successfully"
